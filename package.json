@@ -1,0 +1,40 @@
+{
+  "name": "nuxt-sso-ad",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Module Nuxt pour authentification SSO avec Active Directory",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "clean": "rmdir /s node_modules && del package-lock.json",
+    "fresh-install": "npm run clean && npm cache clean --force && npm install"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^1.0.0",
+    "nuxt": "^3.8.0"
+  },
+  "dependencies": {
+    "@nuxtjs/tailwindcss": "^6.8.4",
+    "ldapjs": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1"
+  },
+  "optionalDependencies": {
+    "@pinia/nuxt": "^0.5.1",
+    "pinia": "^2.1.7",
+    "passport": "^0.6.0",
+    "passport-saml": "^3.2.4",
+    "express-session": "^1.17.3",
+    "connect-redis": "^7.1.0",
+    "redis": "^4.6.10"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
