@@ -42,10 +42,13 @@ export const useAuth = () => {
 
       if (data.success) {
         user.value = data.user
-        token.value = data.token
+        // Ne pas définir le token côté client car il est géré par le cookie httpOnly
         
-        // Rediriger vers la page d'accueil
-        await navigateTo('/dashboard')
+        // Attendre un tick pour que l'état soit synchronisé
+        await nextTick()
+        
+        // Rediriger vers la page d'accueil avec remplacement de l'historique
+        await navigateTo('/dashboard', { replace: true, external: false })
       }
     } catch (err: any) {
       console.error('Erreur de connexion détaillée:', err)

@@ -1,6 +1,4 @@
-export default defineNuxtRouteMiddleware((to) => {
-  const { $auth } = useNuxtApp()
-  
+export default defineNuxtRouteMiddleware((to, from) => {
   // Routes qui nécessitent une authentification
   const protectedRoutes = ['/dashboard', '/admin', '/profile', '/protected']
   
@@ -11,15 +9,20 @@ export default defineNuxtRouteMiddleware((to) => {
   const isPublicRoute = publicRoutes.some(route => to.path.startsWith(route))
   
   if (process.client) {
+    const { user, isAuthenticated } = useAuth()
     const token = useCookie('auth-token')
-    const isAuthenticated = !!token.value
     
-    if (isProtectedRoute && !isAuthenticated) {
+    // Utiliser l'état du composable plutôt que juste le cookie
+    const isUserAuthenticated = isAuthenticated.value || !!token.value
+    
+    if (isProtectedRoute && !isUserAuthenticated) {
       return navigateTo('/auth/login')
     }
     
-    if (isPublicRoute && isAuthenticated) {
-      return navigateTo('/dashboard')
+    // Ne pas rediriger automatiquement depuis les pages publiques si l'utilisateur vient de se connecter
+    // Laisser le composable useAuth gérer la redirection après login
+    if (isPublicRoute && isUserAuthenticated && from?.path !== '/auth/login') {
+      return navigateTo('/dashboard', { replace: true })
     }
   }
 })

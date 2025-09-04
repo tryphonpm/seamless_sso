@@ -113,6 +113,15 @@ const handleLogin = async () => {
     console.log('Tentative de connexion avec:', credentials.value.username)
     await login(credentials.value)
     console.log('Connexion réussie!')
+    
+    // Redirection de sécurité si le composable n'a pas redirigé
+    await nextTick()
+    setTimeout(() => {
+      if (process.client && window.location.pathname === '/auth/login') {
+        console.log('Redirection de sécurité vers /dashboard')
+        window.location.href = '/dashboard'
+      }
+    }, 100)
   } catch (err) {
     console.error('Erreur dans handleLogin:', err)
     // L'erreur est déjà gérée dans le composable useAuth

@@ -150,9 +150,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  middleware: 'auth'
-})
+// Le middleware global auth.global.ts gère déjà la protection de cette route
 
 const { user, logout, fetchUser } = useAuth()
 const { 
