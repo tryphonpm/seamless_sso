@@ -134,5 +134,13 @@ export default defineNuxtModule<ModuleOptions>({
       nitroConfig.plugins = nitroConfig.plugins || []
       nitroConfig.plugins.push(resolver.resolve('./runtime/server/plugins/sftp'))
     })
+
+    // Auto-import des composants SFTP
+    nuxt.hook('components:dirs', (dirs) => {
+      dirs.push({
+        path: resolver.resolve('./runtime/components'),
+        prefix: 'Sftp'  // Optionnel : préfixe pour éviter les conflits
+      })
+    })
   }
 })
