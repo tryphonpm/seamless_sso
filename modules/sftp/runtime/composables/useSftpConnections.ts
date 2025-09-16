@@ -15,22 +15,46 @@ const error = ref<string | null>(null)
 
 export const useSftpConnections = () => {
   // Charger les connexions disponibles depuis la configuration
-  const loadAvailableConnections = () => {
+  const loadAvailableConnections = async () => {
     try {
-      const { $config } = useNuxtApp()
-      const connections = $config.public?.sftpConnections || {}
+      // Récupérer les connexions via une API dédiée
+      const response = await $fetch<{
+        success: boolean
+        connections: Array<{
+          id: string
+          name: string
+          host: string
+          port: number
+          username: string
+        }>
+      }>('/api/sftp/connections')
       
-      availableConnections.value = Object.entries(connections).map(([id, config]: [string, any]) => ({
-        id,
-        name: config.name || id,
-        host: config.host || '',
-        port: config.port || 22,
-        username: config.username || '',
-        connected: false
-      }))
+      if (response.success) {
+        availableConnections.value = response.connections.map(conn => ({
+          ...conn,
+          connected: false
+        }))
+      }
     } catch (err) {
       console.warn('Impossible de charger les connexions SFTP:', err)
-      availableConnections.value = []
+      
+      // Fallback: essayer de charger depuis la configuration publique
+      try {
+        const config = useRuntimeConfig()
+        const connections = config.public?.sftpConnections || {}
+        
+        availableConnections.value = Object.entries(connections).map(([id, config]: [string, any]) => ({
+          id,
+          name: config.name || id,
+          host: config.host || '',
+          port: config.port || 22,
+          username: config.username || '',
+          connected: false
+        }))
+      } catch (configErr) {
+        console.warn('Impossible de charger depuis la configuration:', configErr)
+        availableConnections.value = []
+      }
     }
   }
 

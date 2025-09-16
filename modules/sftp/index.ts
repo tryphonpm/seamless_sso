@@ -109,6 +109,11 @@ export default defineNuxtModule<ModuleOptions>({
       handler: resolver.resolve('./runtime/server/api/sftp/move.post')
     })
 
+    addServerHandler({
+      route: '/api/sftp/connections',
+      handler: resolver.resolve('./runtime/server/api/sftp/connections.get')
+    })
+
     // Ajouter le plugin côté client
     addPlugin(resolver.resolve('./runtime/plugin.client'))
 

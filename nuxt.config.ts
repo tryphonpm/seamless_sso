@@ -52,10 +52,18 @@ export default defineNuxtConfig({
   sftp: {
     connections: {
       server1: {
-        host: process.env.SFTP_SERVER1_HOST || 'localhost',
+        host: process.env.SFTP_SERVER1_HOST || 'test.rebex.net',
         port: parseInt(process.env.SFTP_SERVER1_PORT || '22'),
-        username: process.env.SFTP_SERVER1_USERNAME || '',
-        password: process.env.SFTP_SERVER1_PASSWORD || '',
+        username: process.env.SFTP_SERVER1_USERNAME || 'demo',
+        password: process.env.SFTP_SERVER1_PASSWORD || 'password',
+        timeout: 30000
+      },
+      // Serveur de test public gratuit
+      rebex_test: {
+        host: 'test.rebex.net',
+        port: 22,
+        username: 'demo',
+        password: 'password',
         timeout: 30000
       }
     },

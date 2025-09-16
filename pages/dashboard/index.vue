@@ -96,7 +96,24 @@
         SIMPLE
       </span>
     </NuxtLink>
-         
+    <NuxtLink
+    to="/sftp/api-test"
+    class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  >
+    <span class="mt-2 block text-sm font-medium text-gray-900">
+      API-TEST
+    </span>
+  </NuxtLink>
+  <NuxtLink
+  to="/sftp/test"
+  class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+>
+  <span class="mt-2 block text-sm font-medium text-gray-900">
+    TEST
+  </span>
+</NuxtLink>
+  
+
       <NuxtLink
         to="/sftp/debug"
         class="relative block w-full rounded-lg border-2 border-dashed border-red-300 p-6 text-center hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
