@@ -8,21 +8,35 @@ export default defineNuxtRouteMiddleware((to, from) => {
   const isProtectedRoute = protectedRoutes.some(route => to.path.startsWith(route))
   const isPublicRoute = publicRoutes.some(route => to.path.startsWith(route))
   
+  console.log(`Middleware global: ${to.path} - Protected: ${isProtectedRoute}, Public: ${isPublicRoute}`)
+  
+  // Laisser les routes SFTP être gérées par leur propre middleware
+  if (to.path.startsWith('/sftp')) {
+    console.log('Middleware global: Route SFTP, délégation au middleware spécifique')
+    return
+  }
+  
   if (process.client) {
-    const { user, isAuthenticated } = useAuth()
-    const token = useCookie('auth-token')
-    
-    // Utiliser l'état du composable plutôt que juste le cookie
-    const isUserAuthenticated = isAuthenticated.value || !!token.value
-    
-    if (isProtectedRoute && !isUserAuthenticated) {
-      return navigateTo('/auth/login')
+    console.log('Middleware global: Côté client')
+    try {
+      const { user, isAuthenticated } = useAuth()
+      const isUserAuthenticated = isAuthenticated.value
+      console.log(`Middleware global: Client - Authentifié? ${isUserAuthenticated}`)
+      
+      if (isProtectedRoute && !isUserAuthenticated) {
+        console.log('Middleware global: Redirection vers login (client)')
+        return navigateTo('/auth/login')
+      }
+      
+      if (isPublicRoute && isUserAuthenticated && from?.path !== '/auth/login') {
+        console.log('Middleware global: Redirection vers dashboard (client)')
+        return navigateTo('/dashboard', { replace: true })
+      }
+    } catch (error) {
+      console.warn('Erreur useAuth dans middleware:', error)
+      console.log('Middleware global: Erreur composable, accès autorisé temporairement')
     }
-    
-    // Ne pas rediriger automatiquement depuis les pages publiques si l'utilisateur vient de se connecter
-    // Laisser le composable useAuth gérer la redirection après login
-    if (isPublicRoute && isUserAuthenticated && from?.path !== '/auth/login') {
-      return navigateTo('/dashboard', { replace: true })
-    }
+  } else {
+    console.log('Middleware global: Côté serveur - pas de vérification pour éviter l\'hydratation')
   }
 })

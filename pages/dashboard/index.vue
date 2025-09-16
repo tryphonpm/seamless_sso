@@ -76,38 +76,37 @@
 <div class="bg-white overflow-hidden shadow rounded-lg">
   <div class="px-4 py-5 sm:p-6">
     <h2 class="text-lg font-medium text-gray-900 mb-4">
-      CONNEXIONS PAS-SAGE
+      CONNEXIONS SFTP
     </h2>
     
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <NuxtLink
-        to="/profile"
+        to="/sftp/status"
         class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       >
         <span class="mt-2 block text-sm font-medium text-gray-900">
-          Modifier le profil
+          STATUS
         </span>
       </NuxtLink>
-      
       <NuxtLink
-        v-if="isAdmin"
-        to="/admin"
+      to="/sftp/simple"
+      class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    >
+      <span class="mt-2 block text-sm font-medium text-gray-900">
+        SIMPLE
+      </span>
+    </NuxtLink>
+         
+      <NuxtLink
+        to="/sftp/debug"
         class="relative block w-full rounded-lg border-2 border-dashed border-red-300 p-6 text-center hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
       >
         <span class="mt-2 block text-sm font-medium text-red-900">
-          Administration
+          DEBUG
         </span>
       </NuxtLink>
       
-      <button
-        @click="refreshUserInfo"
-        :disabled="isRefreshing"
-        class="relative block w-full rounded-lg border-2 border-dashed border-green-300 p-6 text-center hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-      >
-        <span class="mt-2 block text-sm font-medium text-green-900">
-          {{ isRefreshing ? 'Actualisation...' : 'Actualiser les infos' }}
-        </span>
-      </button>
+
     </div>
   </div>
 </div>

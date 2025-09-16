@@ -92,10 +92,8 @@ export const useAuth = () => {
 
   const fetchUser = async () => {
     try {
-      if (!token.value) {
-        return null
-      }
-
+      // Essayer de récupérer l'utilisateur même sans token côté client
+      // car le cookie httpOnly sera envoyé automatiquement avec la requête
       const data = await $fetch<{
         success: boolean
         user: AuthUser
@@ -107,9 +105,12 @@ export const useAuth = () => {
       }
     } catch (err: any) {
       console.error('Erreur lors de la récupération du profil:', err)
-      // Token invalide, nettoyer l'état
+      // Nettoyer l'état utilisateur
       user.value = null
-      token.value = null
+      if (process.client) {
+        // Côté client, ne pas toucher au token car il est httpOnly
+        console.log('Utilisateur non authentifié')
+      }
     }
     
     return null
@@ -160,13 +161,15 @@ export const useAuth = () => {
   }
 
   const initAuth = async () => {
-    if (token.value && !user.value) {
+    // Toujours essayer de récupérer l'utilisateur côté client
+    // car le cookie httpOnly sera envoyé automatiquement
+    if (process.client && !user.value) {
       await fetchUser()
     }
   }
 
-  // Auto-initialisation
-  if (process.client && token.value && !user.value) {
+  // Auto-initialisation côté client
+  if (process.client && !user.value) {
     initAuth()
   }
 
