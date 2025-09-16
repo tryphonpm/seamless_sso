@@ -26,12 +26,29 @@ export default defineEventHandler(async (event) => {
 
     // Vérifier les hôtes autorisés
     const allowedHosts = config.sftp?.security?.allowedHosts || []
-    if (allowedHosts.length > 0 && !allowedHosts.includes(connectionConfig.host)) {
+    console.log('SFTP Connect - Hôtes autorisés:', allowedHosts)
+    console.log('SFTP Connect - Hôte demandé:', connectionConfig.host)
+    console.log('SFTP Connect - Toute la config SFTP:', JSON.stringify(config.sftp, null, 2))
+    
+    // Permettre tous les hôtes des connexions configurées
+    const configuredHosts = Object.values(config.sftp?.connections || {}).map((conn: any) => conn.host)
+    console.log('SFTP Connect - Hôtes configurés dans les connexions:', configuredHosts)
+    
+    // Logique améliorée : permettre tous les hôtes des connexions configurées
+    const isHostAllowed = configuredHosts.includes(connectionConfig.host) || 
+                         allowedHosts.includes(connectionConfig.host) ||
+                         allowedHosts.length === 0
+    
+    console.log('SFTP Connect - Hôte autorisé?', isHostAllowed)
+    
+    if (!isHostAllowed) {
       throw createError({
         statusCode: 403,
-        statusMessage: 'Hôte non autorisé'
+        statusMessage: `Hôte non autorisé: ${connectionConfig.host}. Hôtes autorisés: ${allowedHosts.join(', ')}. Hôtes configurés: ${configuredHosts.join(', ')}`
       })
     }
+    
+    console.log('SFTP Connect - Vérification des hôtes réussie, tentative de connexion...')
 
     const pool = getSftpPool()
     const service = await pool.getConnection(connectionId, connectionConfig)
