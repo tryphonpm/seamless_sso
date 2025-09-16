@@ -112,14 +112,21 @@
     TEST
   </span>
 </NuxtLink>
-  
 
+<NuxtLink
+to="/sftp/debug"
+class="relative block w-full rounded-lg border-2 border-dashed border-red-300 p-6 text-center hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+>
+<span class="mt-2 block text-sm font-medium text-red-900">
+  DEBUG
+</span>
+</NuxtLink>
       <NuxtLink
-        to="/sftp/debug"
+        to="/sftp/download-test"
         class="relative block w-full rounded-lg border-2 border-dashed border-red-300 p-6 text-center hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
       >
         <span class="mt-2 block text-sm font-medium text-red-900">
-          DEBUG
+          DOWNLOAD-TEST
         </span>
       </NuxtLink>
       

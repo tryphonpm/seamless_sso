@@ -148,22 +148,26 @@
             <div class="flex items-center space-x-2">
               <button
                 v-if="file.type === 'file'"
-                @click="downloadFile(file.path, file.name)"
-                class="p-1 text-gray-400 hover:text-blue-600"
-                title="Télécharger"
+                @click="handleDownload(file.path, file.name)"
+                :disabled="isLoading"
+                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Télécharger le fichier"
               >
-                <Icon name="heroicons:arrow-down-tray" class="h-4 w-4" />
+                <Icon name="heroicons:arrow-down-tray" class="h-3 w-3 mr-1" />
+                Télécharger
               </button>
               <button
                 @click="showRenamePrompt(file)"
-                class="p-1 text-gray-400 hover:text-yellow-600"
+                :disabled="isLoading"
+                class="p-1 text-gray-400 hover:text-yellow-600 disabled:opacity-50"
                 title="Renommer"
               >
                 <Icon name="heroicons:pencil" class="h-4 w-4" />
               </button>
               <button
                 @click="confirmDelete(file)"
-                class="p-1 text-gray-400 hover:text-red-600"
+                :disabled="isLoading"
+                class="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
                 title="Supprimer"
               >
                 <Icon name="heroicons:trash" class="h-4 w-4" />
@@ -202,6 +206,24 @@
         ></div>
       </div>
     </div>
+
+    <!-- Message de feedback -->
+    <div 
+      v-if="downloadMessage" 
+      :class="downloadMessage.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'"
+      class="px-4 py-3 border-t border-gray-200"
+    >
+      <div class="flex items-center">
+        <Icon 
+          :name="downloadMessage.type === 'success' ? 'heroicons:check-circle' : 'heroicons:x-circle'" 
+          class="h-4 w-4 mr-2" 
+        />
+        <span class="text-sm font-medium">{{ downloadMessage.text }}</span>
+        <button @click="downloadMessage = null" class="ml-auto">
+          <Icon name="heroicons:x-mark" class="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -222,13 +244,89 @@ const {
   renameFile
 } = useSftp()
 
-const { formatFileSize, formatDate, getFileIcon } = useNuxtApp().$sftp
+// Fonctions utilitaires
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const formatDate = (date: Date): string => {
+  return new Intl.DateTimeFormat('fr-FR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+const getFileIcon = (filename: string, isDirectory: boolean): string => {
+  if (isDirectory) return '📁'
+  
+  const ext = filename.split('.').pop()?.toLowerCase()
+  
+  switch (ext) {
+    case 'txt':
+    case 'md':
+    case 'readme':
+      return '📄'
+    case 'pdf':
+      return '📕'
+    case 'doc':
+    case 'docx':
+      return '📘'
+    case 'xls':
+    case 'xlsx':
+      return '📗'
+    case 'ppt':
+    case 'pptx':
+      return '📙'
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'bmp':
+    case 'svg':
+      return '🖼️'
+    case 'mp3':
+    case 'wav':
+    case 'flac':
+      return '🎵'
+    case 'mp4':
+    case 'avi':
+    case 'mkv':
+    case 'mov':
+      return '🎬'
+    case 'zip':
+    case 'rar':
+    case '7z':
+    case 'tar':
+    case 'gz':
+      return '📦'
+    case 'js':
+    case 'ts':
+    case 'html':
+    case 'css':
+    case 'php':
+    case 'py':
+    case 'java':
+    case 'cpp':
+    case 'c':
+      return '💻'
+    default:
+      return '📄'
+  }
+}
 
 // Refs
 const fileInput = ref<HTMLInputElement>()
 const searchTerm = ref('')
 const sortBy = ref<'name' | 'size' | 'date'>('name')
 const sortAscending = ref(true)
+const downloadMessage = ref<{ type: 'success' | 'error', text: string } | null>(null)
 
 // Computed
 const pathSegments = computed(() => {
@@ -298,8 +396,10 @@ const handleFileUpload = async (event: Event) => {
     try {
       await uploadFiles(target.files)
       target.value = '' // Reset input
+      showMessage('success', `${target.files.length} fichier(s) uploadé(s) avec succès`)
     } catch (error) {
       console.error('Erreur upload:', error)
+      showMessage('error', 'Erreur lors de l\'upload des fichiers')
     }
   }
 }
@@ -309,8 +409,10 @@ const showCreateFolderPrompt = async () => {
   if (folderName && folderName.trim()) {
     try {
       await createDirectory(folderName.trim())
+      showMessage('success', `Dossier "${folderName.trim()}" créé avec succès`)
     } catch (error) {
       console.error('Erreur création dossier:', error)
+      showMessage('error', `Erreur lors de la création du dossier "${folderName.trim()}"`)
     }
   }
 }
@@ -320,8 +422,10 @@ const showRenamePrompt = async (file: any) => {
   if (newName && newName.trim() && newName !== file.name) {
     try {
       await renameFile(file.name, newName.trim())
+      showMessage('success', `"${file.name}" renommé en "${newName.trim()}" avec succès`)
     } catch (error) {
       console.error('Erreur renommage:', error)
+      showMessage('error', `Erreur lors du renommage de "${file.name}"`)
     }
   }
 }
@@ -331,9 +435,29 @@ const confirmDelete = async (file: any) => {
   if (confirmed) {
     try {
       await deleteFile(file.path)
+      showMessage('success', `Fichier "${file.name}" supprimé avec succès`)
     } catch (error) {
       console.error('Erreur suppression:', error)
+      showMessage('error', `Erreur lors de la suppression de "${file.name}"`)
     }
   }
+}
+
+const handleDownload = async (remotePath: string, filename: string) => {
+  try {
+    console.log('Téléchargement de:', remotePath, '->', filename)
+    await downloadFile(remotePath, filename)
+    showMessage('success', `Fichier "${filename}" téléchargé avec succès`)
+  } catch (error) {
+    console.error('Erreur téléchargement:', error)
+    showMessage('error', `Erreur lors du téléchargement de "${filename}"`)
+  }
+}
+
+const showMessage = (type: 'success' | 'error', text: string) => {
+  downloadMessage.value = { type, text }
+  setTimeout(() => {
+    downloadMessage.value = null
+  }, 4000)
 }
 </script>

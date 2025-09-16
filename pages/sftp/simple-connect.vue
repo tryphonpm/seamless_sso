@@ -1,60 +1,75 @@
 <template>
-  <div class="p-8">
-    <h1 class="text-2xl font-bold mb-4">Test Connexion SFTP Simple</h1>
-    
-    <div class="mb-6">
-      <h2 class="text-lg font-semibold mb-4">Connexions disponibles</h2>
-      
-      <div v-if="availableConnections.length > 0" class="space-y-4">
-        <div 
-          v-for="connection in availableConnections" 
-          :key="connection.id"
-          class="p-4 border rounded"
-        >
-          <h3 class="font-medium">{{ connection.name }}</h3>
-          <p class="text-sm text-gray-600">{{ connection.host }}:{{ connection.port }}</p>
-          <p class="text-sm text-gray-600">Utilisateur: {{ connection.username }}</p>
-          
-          <button 
-            @click="connectToServer(connection.id)"
+  <div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white shadow rounded-lg p-6">
+        <h1 class="text-xl font-semibold text-gray-900 mb-6">Test de connexion SFTP simple</h1>
+        
+        <!-- Connexion rapide au serveur de test -->
+        <div class="mb-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Connexion rapide</h2>
+          <button
+            @click="connectToTestServer"
             :disabled="isLoading"
-            class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
-            {{ isLoading ? 'Connexion...' : 'Se connecter' }}
+            <Icon v-if="isLoading" name="heroicons:arrow-path" class="animate-spin h-4 w-4 mr-2" />
+            <Icon v-else name="heroicons:server" class="h-4 w-4 mr-2" />
+            {{ isLoading ? 'Connexion...' : 'Se connecter au serveur de test' }}
           </button>
         </div>
-      </div>
-      
-      <div v-else class="text-gray-500">
-        Aucune connexion disponible
-      </div>
-    </div>
 
-    <!-- État de connexion -->
-    <div v-if="currentConnection" class="mb-6 p-4 bg-green-50 border border-green-200 rounded">
-      <h3 class="text-green-800 font-medium">Connecté à {{ currentConnection.name }}</h3>
-      <p class="text-green-700">{{ currentConnection.host }}</p>
-      
-      <button 
-        @click="disconnect"
-        class="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-      >
-        Déconnecter
-      </button>
-    </div>
+        <!-- État de la connexion -->
+        <div v-if="currentConnection" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+          <div class="flex">
+            <Icon name="heroicons:check-circle" class="h-5 w-5 text-green-400" />
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-green-800">
+                Connecté à {{ currentConnection.name }}
+              </h3>
+              <p class="mt-1 text-sm text-green-700">
+                {{ currentConnection.host }}
+              </p>
+            </div>
+          </div>
+        </div>
 
-    <!-- Erreurs -->
-    <div v-if="error" class="mb-6 p-4 bg-red-50 border border-red-200 rounded">
-      <h3 class="text-red-800 font-medium">Erreur</h3>
-      <p class="text-red-700">{{ error }}</p>
-    </div>
+        <!-- Message d'erreur -->
+        <div v-if="error" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+          <div class="flex">
+            <Icon name="heroicons:x-circle" class="h-5 w-5 text-red-400" />
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">Erreur de connexion</h3>
+              <p class="mt-1 text-sm text-red-700">{{ error }}</p>
+            </div>
+          </div>
+        </div>
 
-    <!-- Logs de debug -->
-    <div class="mt-8">
-      <h3 class="font-semibold mb-2">Logs de debug</h3>
-      <div class="bg-gray-100 p-4 rounded text-sm">
-        <div v-for="(log, index) in debugLogs" :key="index" class="mb-1">
-          {{ log }}
+        <!-- Navigateur de fichiers -->
+        <div v-if="currentConnection">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Navigateur de fichiers</h2>
+          <SftpBrowser />
+        </div>
+
+        <!-- Instructions -->
+        <div v-else class="mt-8">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Instructions</h2>
+          <div class="prose text-sm text-gray-600">
+            <p>Cette page utilise un serveur SFTP de test public :</p>
+            <ul>
+              <li><strong>Serveur :</strong> test.rebex.net</li>
+              <li><strong>Utilisateur :</strong> demo</li>
+              <li><strong>Mot de passe :</strong> password</li>
+            </ul>
+            <p>Une fois connecté, vous pourrez :</p>
+            <ul>
+              <li>📁 Naviguer dans l'arborescence des fichiers</li>
+              <li>⬇️ <strong>Télécharger des fichiers</strong> avec le bouton "Télécharger"</li>
+              <li>⬆️ Uploader des fichiers</li>
+              <li>📝 Renommer des fichiers et dossiers</li>
+              <li>🗑️ Supprimer des fichiers et dossiers</li>
+              <li>📂 Créer de nouveaux dossiers</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -62,50 +77,26 @@
 </template>
 
 <script setup lang="ts">
-// Pas de middleware pour cette page de test
+// Métadonnées de la page
 definePageMeta({
-  middleware: []
+  middleware: [] // Pas d'authentification pour le test
 })
 
 // Composables
-const { currentConnection, isLoading, error, connect, disconnect } = useSftp()
-const { availableConnections, loadAvailableConnections } = useSftpConnections()
-
-// Logs de debug
-const debugLogs = ref<string[]>([])
-
-const addLog = (message: string) => {
-  debugLogs.value.unshift(`${new Date().toLocaleTimeString()}: ${message}`)
-  if (debugLogs.value.length > 20) {
-    debugLogs.value = debugLogs.value.slice(0, 20)
-  }
-}
+const { 
+  currentConnection, 
+  isLoading, 
+  error,
+  connect
+} = useSftp()
 
 // Méthodes
-const connectToServer = async (connectionId: string) => {
+const connectToTestServer = async () => {
   try {
-    addLog(`Tentative de connexion à ${connectionId}`)
-    await connect(connectionId)
-    addLog(`Connexion réussie à ${connectionId}`)
-  } catch (err: any) {
-    addLog(`Erreur de connexion: ${err.message}`)
+    // Se connecter au serveur de test rebex
+    await connect('rebex_test')
+  } catch (err) {
     console.error('Erreur de connexion:', err)
   }
 }
-
-// Initialisation
-onMounted(async () => {
-  addLog('Page montée, chargement des connexions...')
-  try {
-    await loadAvailableConnections()
-    addLog(`${availableConnections.value.length} connexion(s) chargée(s)`)
-  } catch (err: any) {
-    addLog(`Erreur chargement connexions: ${err.message}`)
-  }
-})
-
-useHead({
-  title: 'Test Connexion SFTP Simple'
-})
 </script>
-

@@ -175,27 +175,39 @@ export const useSftp = () => {
       isLoading.value = true
       error.value = null
 
-      const response = await fetch('/api/sftp/download', {
+      // Construire l'URL avec le paramètre remotePath dans la query string
+      const url = `/api/sftp/download?remotePath=${encodeURIComponent(remotePath)}`
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ remotePath })
+          'Accept': 'application/octet-stream'
+        }
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Erreur de téléchargement')
+        let errorMessage = 'Erreur de téléchargement'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorMessage
+        } catch {
+          errorMessage = `Erreur HTTP ${response.status}: ${response.statusText}`
+        }
+        throw new Error(errorMessage)
       }
 
+      // Créer le blob et déclencher le téléchargement
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
+      const downloadUrl = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url
+      a.href = downloadUrl
       a.download = filename
+      a.style.display = 'none'
       document.body.appendChild(a)
       a.click()
-      window.URL.revokeObjectURL(url)
+      
+      // Nettoyer
+      window.URL.revokeObjectURL(downloadUrl)
       document.body.removeChild(a)
     } catch (err: any) {
       error.value = err.message || 'Erreur lors du téléchargement'
