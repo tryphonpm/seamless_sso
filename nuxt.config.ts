@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
+    '@nuxt/icon',
     './modules/sso-ad',
     './modules/sftp'
   ],
@@ -52,7 +53,11 @@ export default defineNuxtConfig({
   sftp: {
     connections: {
       server1: {
-        host: process.env.SFTP_SERVER1_HOST || 'test.rebex.net',
+        host: (() => {
+          const hostEnv = process.env.SFTP_SERVER1_HOST || 'test.rebex.net'
+          // Nettoyer l'URL pour extraire seulement le hostname
+          return hostEnv.replace(/^sftp:\/\//, '').replace(/\/.*$/, '')
+        })(),
         port: parseInt(process.env.SFTP_SERVER1_PORT || '22'),
         username: process.env.SFTP_SERVER1_USERNAME || 'demo',
         password: process.env.SFTP_SERVER1_PASSWORD || 'password',
@@ -68,7 +73,21 @@ export default defineNuxtConfig({
       }
     },
     security: {
-      allowedHosts: process.env.SFTP_ALLOWED_HOSTS?.split(',') || [],
+      allowedHosts: (() => {
+        const envHosts = process.env.SFTP_ALLOWED_HOSTS?.split(',') || []
+        const defaultHosts = ['test.rebex.net', 'localhost']
+        const server1Host = process.env.SFTP_SERVER1_HOST ? 
+          process.env.SFTP_SERVER1_HOST.replace(/^sftp:\/\//, '').replace(/\/.*$/, '') : 
+          null
+        
+        // Combiner tous les hôtes : env + défaut + server1
+        const allHosts = [...envHosts, ...defaultHosts]
+        if (server1Host && !allHosts.includes(server1Host)) {
+          allHosts.push(server1Host)
+        }
+        
+        return [...new Set(allHosts)] // Éliminer les doublons
+      })(),
       maxConnections: parseInt(process.env.SFTP_MAX_CONNECTIONS || '10'),
       connectionTimeout: parseInt(process.env.SFTP_CONNECTION_TIMEOUT || '30000'),
       uploadMaxSize: parseInt(process.env.SFTP_UPLOAD_MAX_SIZE || '104857600')
